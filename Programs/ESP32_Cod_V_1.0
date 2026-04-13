@@ -1,0 +1,28 @@
+#include <BluetoothSerial.h>
+#include <WiFi.h>
+
+
+BluetoothSerial SerialBT;
+
+  
+void setup() {
+  SerialPort.begin(115200, SERIAL_8N1, 16, 17); // RX, TX
+  SerialBT.begin(9600);
+  Serial.begin(115200);
+}
+
+
+void loop() {
+
+      if (SerialBT.available() > 0) {
+        
+        int incomingByte = SerialBT.read();
+        
+
+        Serial.print("Получено: ");
+        Serial.println(incomingByte);
+        SerialPort.write(incomingByte);
+}
+
+ 
+}
