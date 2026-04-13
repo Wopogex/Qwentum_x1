@@ -1,0 +1,179 @@
+#include <AccelStepper.h>
+#include <Arduino.h>
+#include <TimerOne.h> 
+#include <stdio.h>
+
+
+#define STEP_PIN   4
+#define DIR_PIN    7
+#define DIR_PIN2   5
+#define STEP_PIN2  2
+#define ENABLE_PIN 8
+
+const int rxpin = 0;       
+const int txpin = 1;        
+volatile int q = 0;           // данные от ESP32 или Raspberry Pi
+volatile bool newData = false;
+int l = 0;                    // скорость моторa
+int p = 0;
+int np1 = 0;
+int np2 = 0;
+float mn = 0.0;
+float p_x = 0;
+float p_y = 0;
+int q_x = 0;
+int q_y = 0;
+int n = 0;
+int s = 0;
+int s2 = 0;
+bool TorF = true;
+bool time = false;
+bool g = false;
+
+
+
+
+AccelStepper stepper (1, STEP_PIN,  DIR_PIN);
+AccelStepper stepper2(1, STEP_PIN2, DIR_PIN2);
+
+void setup() {
+  stepper .setMaxSpeed(1550);
+  stepper2.setMaxSpeed(1550);
+  Serial.begin(115200);
+  pinMode(rxpin, INPUT);
+  pinMode(ENABLE_PIN, OUTPUT); 
+  digitalWrite(ENABLE_PIN, LOW); // Включаем драйвера
+
+  stepper .setCurrentPosition(0);
+  attachInterrupt(digitalPinToInterrupt(rxpin), serialEvent, CHANGE);
+  Timer1.initialize(10000);             // Инициализируем таймер на 10 мс (10000 мкс)
+  Timer1.attachInterrupt(timerHandler); // Привязываем функцию timerHandler к прерыванию таймера
+}
+
+void loop() {
+
+
+  }
+  if (newData) {
+    newData = false;
+    Serial.print(F("Получено с ESP32: "));
+    Serial.println(q);
+
+    if(q >= 201 && q <= 256){                 //255 Hah
+      n = q;}
+    if (q >= 0 && q <= 200){
+      switch (n) {
+        case 201: l = map(q, 0, 200, 0, 1500);n = 0;g = true; break;
+        case 202: q_y = map(q, 0, 200, -100, 100); p_y = ((float) l) * q_y / 100.0f;n = 0; break;
+        case 203: q_x = map(q, 0, 200, -100, 100); p_x = ((float) l) * q_x / 100.0f;n = 0; break; 
+     }
+    }
+    
+
+
+
+  // Остановка и выключение моторов при q == 0
+  if (q == 0) {
+    p = 0; mn = 0.0; p_y = 0; p_x = 0; np1 = 0; np2 = 0;
+    digitalWrite(ENABLE_PIN, HIGH); // Выключаем драйвер 1
+    g = false;
+  } else {
+    digitalWrite(ENABLE_PIN, LOW); // Включаем драйвер 1
+ }     
+}
+   
+
+
+  if( time ) {
+
+
+    if (abs(np1) > l){
+
+      np1 = l * s; //баг
+      TorF = false;
+    } else {
+      TorF = true;}
+
+    if (abs(np1) < abs(p_y - p_x) && (TorF)){
+      s = ((p_y - p_x) > 0) - ((p_y - p_x) < 0);
+      np1 = np1 + 10 * s;
+      }
+
+    if (abs(np1) > abs(p_y - p_x) && (TorF)){
+      if((np1 > 0 && (p_y - p_x) > 0) || (np1 < 0 && (p_y - p_x) < 0)){
+        s = ((p_y - p_x) > 0) - ((p_y - p_x) < 0);
+        np1 = np1  - 10 * s;         
+      } 
+      if((np1 > 0) && (p_y + p_x) < 0){
+        np1 = np1 - 10;
+      }
+
+      if((np1 < 0) && (p_y + p_x) > 0){
+        np1 = np1 + 10;
+      }
+}
+   
+    if (abs(np2) > l){
+
+      np2 = l * s; //баг
+      TorF = false;
+    } else {
+      TorF = true;}
+
+    if (abs(np2) < abs(p_y + p_x) && (TorF)){
+      s = ((p_y + p_x) > 0) - ((p_y + p_x) < 0);
+      np2 = np2 + 10 * s; 
+      }
+      
+    if (abs(np2) > abs(p_y + p_x) && (TorF)){
+      if((np2 > 0 && (p_y + p_x) > 0) || (np2 < 0 && (p_y + p_x) < 0)){
+        s = ((p_y + p_x) > 0) - ((p_y + p_x) < 0);
+        np2 = np2 - 10 * s;         
+      } 
+      if((np2 > 0) && (p_y + p_x) < 0){
+        np2 = np2 - 10;
+      }
+
+      if((np2 < 0) && (p_y + p_x) > 0){
+        np2 = np2 + 10;
+      }
+      }
+      time = false;
+
+}
+    
+
+   
+
+  
+
+
+  
+
+
+  stepper .setSpeed(np1);     // (Левый мотор)
+  stepper2.setSpeed(np2);     // (Правый мотор)
+  stepper .runSpeed();
+  stepper2.runSpeed();
+
+}
+
+void serialEvent() {
+  if (Serial.available()) {
+    q = Serial.read();
+    newData = true;
+
+    }
+    
+    
+  }
+
+
+void timerHandler() {
+
+
+  if ( p_x != 0  ||  p_y != 0 ){
+    time = true;
+
+}
+}
