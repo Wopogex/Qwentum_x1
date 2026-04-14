@@ -60,8 +60,10 @@ ________________________________________________________________________________
                                               3D_Models -> Kolesa -> Koleso_Part_2                                                                                              
                                  2.2: Корпус: 3D_Models -> Korpus -> Rama                                                                                                       
                                               3D_models -> Korpus -> Poddon_Part_1                                                                                              
-                                              3D_models -> Korpus -> Poddon_Part_2                                                                                              
-                                                                                                                                                                                
+                                              3D_models -> Korpus -> Poddon_Part_2                                                                                                                      
+                                 3.3: Держатели: 3D_models -> Derjateli -> Derjateli_1                                                                                                                  
+                                                 3D_models -> Derjateli -> Derjateli_1                                                                                                                  
+                                                 3D_models -> Derjateli -> Derjateli_1                                                                                                                                                                                                                                                                                                                          
 3:                                                                                                                                                                              
     Загрузить все программы:                                                                                                                                                    
                              3.1: На Raspberry Pi (4): Programs -> Raspberry_Pi_Cod_V_1.0                                                                                       
