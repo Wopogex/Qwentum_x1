@@ -43,7 +43,7 @@ def pp1(): # Настройка скорости (1)
         print("Скорость установлена: 200 шаг/с")
         ser.write(bytes([201])) # 201 - грубо говоря ключ скорости, мы посылаем 201 и в коде Arduino на строке 65-66 - уже преобразование следующего бита в значение от 0 до 1500
         ser.write(bytes([200])) # само значение скорости 200 - в доме достаточно быстро
-        ser.write(bytes([0]))
+        ser.write(bytes([0]))   
 
 def pp(): # Настройка скорости (2)
     if ser:
@@ -168,13 +168,13 @@ def RUN(): # просто для удобства
         ser.write(bytes([202]))
         ser.write(bytes([100]))
         ser.write(bytes([203]))
-        ser.write(bytes([1]))
+        ser.write(bytes([1]))                                                  # если 0, то моторы выключатся
         print("Нажата D")
     elif sPressed and Storf and not wPressed and not aPressed and not dPressed:
         Storf = False
         ser.write(bytes([0]))
-        ser.write(bytes([202]))
-        ser.write(bytes([1]))
+        ser.write(bytes([202]))  
+        ser.write(bytes([1]))                                                  # если 0, то моторы выключатся
         ser.write(bytes([203]))
         ser.write(bytes([100]))
         print("Нажата S")
