@@ -12,28 +12,24 @@
 
 const int rxpin = 0;       
 const int txpin = 1;        
-volatile int q = 0;           // данные от ESP32 или Raspberry Pi
-volatile bool newData = false;
-int l = 0;                    // скорость моторa
-int p = 0;
-int np1 = 0;
-int np2 = 0;
-float mn = 0.0;
-float p_x = 0;
-float p_y = 0;
-int q_x = 0;
-int q_y = 0;
-int n = 0;
-int s = 0;
-int s2 = 0;
-bool TorF = true;
-bool time = false;
-bool g = false;
+volatile int q = 0;            // данные от ESP32 или Raspberry Pi
+volatile bool newData = false; // пришли ли новые данные?
+int l = 0;                     // установленная скорость
+int np1 = 0;                   // скорость двигателя 1 
+int np2 = 0;                   // скорость двигателя 2 
+float p_x = 0;                 // скорость по оси X
+float p_y = 0;                 // скорость оп оси Y
+int q_x = 0;                   // второй байт после 203 X, то есть коордитана по X
+int q_y = 0;                   // второй байт после 202 Y, то есть коордитана по Y
+int n = 0;                     // для обработки ключей
+int s = 0;                     // направление движения
+bool TorF = true;              // расшифровка: "True_or_False", флаг для избежания спама
+bool time = false;             // для обработки прерывания 
 
 
 
 
-AccelStepper stepper (1, STEP_PIN,  DIR_PIN);
+AccelStepper stepper (1, STEP_PIN,  DIR_PIN);                   // инициализация шаговых двигателей (драйверов)
 AccelStepper stepper2(1, STEP_PIN2, DIR_PIN2);
 
 void setup() {
@@ -63,9 +59,9 @@ void loop() {
       n = q;}
     if (q >= 0 && q <= 200){
       switch (n) {
-        case 201: l = map(q, 0, 200, 0, 1500);n = 0;g = true; break;
-        case 202: q_y = map(q, 0, 200, -100, 100); p_y = ((float) l) * q_y / 100.0f;n = 0; break;
-        case 203: q_x = map(q, 0, 200, -100, 100); p_x = ((float) l) * q_x / 100.0f;n = 0; break; 
+        case 201: l = map(q, 0, 200, 0, 1500);n = 0;g = true; break;                               // преобразование и установка "нужной" скорости
+        case 202: q_y = map(q, 0, 200, -100, 100); p_y = ((float) l) * q_y / 100.0f;n = 0; break;  // второе преобразование скорости но уже для оси передвижения по Y
+        case 203: q_x = map(q, 0, 200, -100, 100); p_x = ((float) l) * q_x / 100.0f;n = 0; break;  // второе преобразование скорости но уже для оси передвижения по X
      }
     }
     
@@ -74,7 +70,7 @@ void loop() {
 
   // Остановка и выключение моторов при q == 0
   if (q == 0) {
-    p = 0; mn = 0.0; p_y = 0; p_x = 0; np1 = 0; np2 = 0;
+    p = 0; mn = 0.0; p_y = 0; p_x = 0; np1 = 0; np2 = 0; // сброс переменных
     digitalWrite(ENABLE_PIN, HIGH); // Выключаем драйвер 1
     g = false;
   } else {
@@ -84,12 +80,12 @@ void loop() {
    
 
 
-  if( time ) {
+  if( time ) {       // управление ускорением движения (если нужно чтобы было быстрее или медленнее нужно поменять "Timer1.initialize('10000');" на 49 строке)
 
 
-    if (abs(np1) > l){
+    if (abs(np1) > l){                                     
 
-      np1 = l * s; //баг
+      np1 = l * s; 
       TorF = false;
     } else {
       TorF = true;}
@@ -115,7 +111,7 @@ void loop() {
    
     if (abs(np2) > l){
 
-      np2 = l * s; //баг
+      np2 = l * s; 
       TorF = false;
     } else {
       TorF = true;}
