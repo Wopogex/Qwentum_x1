@@ -59,8 +59,6 @@ ________________________________________________________________________________
                                  2.1: Колёса: 3D_Models -> Kolesa -> Koleso_Part_1                                                                                              
                                               3D_Models -> Kolesa -> Koleso_Part_2                                                                                              
                                  2.2: Корпус: 3D_Models -> Korpus -> Rama                                                                                                       
-                                              3D_models -> Korpus -> Poddon                                                                                                     
-                                                            ИЛИ                                                                                                                 
                                               3D_models -> Korpus -> Poddon_Part_1                                                                                              
                                               3D_models -> Korpus -> Poddon_Part_2                                                                                              
                                                                                                                                                                                 
