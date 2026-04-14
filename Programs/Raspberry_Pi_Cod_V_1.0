@@ -1,0 +1,292 @@
+
+from flask import Flask, render_template, request, Response
+import serial
+import random
+import time
+
+
+app = Flask(__name__)
+
+# --- Настройки Serial Port ---
+try:
+    port = "/dev/ttyUSB0"  
+    baudrate = 115200
+    ser = serial.Serial(port, baudrate, timeout=1)
+    ser.flush()
+    print(f"Successfully connected to serial port: {port}")
+except Exception as e:
+    print(f"Serial port connection error: {e}")
+    ser = None # Важно установить ser в None, если подключение не удалось
+
+# --- Флаги для управления движением ---
+p = 0
+q = 0
+
+wPressed = False
+aPressed = False
+dPressed = False
+sPressed = False
+
+WtorfA = True
+WtorfD = True
+StorfA = True
+StorfD = True
+
+Wtorf = True
+Atorf = True
+Dtorf = True
+Storf = True
+
+# --- Функции для управления ---
+def pp1(): # Настройка скорости (1)
+    if ser:
+        print("Скорость установлена: 200 шаг/с")
+        ser.write(bytes([201])) # 201 - грубо говоря ключ скорости, мы посылаем 201 и в коде Arduino на строке 65-66 - уже преобразование следующего бита в значение от 0 до 1500
+        ser.write(bytes([200])) # само значение скорости 200 - в доме достаточно быстро
+        ser.write(bytes([0]))
+
+def pp(): # Настройка скорости (2)
+    if ser:
+        print("Скорость установлена: 50 шаг/с")
+        ser.write(bytes([201]))
+        ser.write(bytes([50]))
+        ser.write(bytes([0]))
+
+def W_down(): # функция нажатия кнопки
+    global wPressed # флаг нажатия-отжатия кнопки
+    wPressed = True
+    print("W pressed")
+
+def A_down():
+    global aPressed
+    aPressed = True
+    print("A pressed")
+
+def D_down():
+    global dPressed
+    dPressed = True
+    print("D pressed")
+
+def S_down():
+    global sPressed
+    sPressed = True
+    print("S pressed")
+
+def KUP(): # сброс всех флагов 
+    global Wtorf, Atorf, Dtorf, Storf, WtorfA, WtorfD, StorfA, StorfD
+    Wtorf = True
+    Atorf = True
+    Dtorf = True
+    Storf = True
+    WtorfA = True
+    WtorfD = True
+    StorfA = True
+    StorfD = True
+
+def W_up(): # функция отжатия кнопки
+    global wPressed # флаг нажатия-отжатия кнопки
+    wPressed = False
+    print("W released")
+    KUP()
+
+def A_up():
+    global aPressed
+    aPressed = False
+    print("A released")
+    KUP()
+
+def D_up():
+    global dPressed
+    dPressed = False
+    print("D released")
+    KUP()
+
+def S_up():
+    global sPressed
+    sPressed = False
+    print("S released")
+    KUP()
+
+def RUN(): # просто для удобства
+    global Wtorf, Atorf, Dtorf, Storf, WtorfA, WtorfD, StorfA, StorfD, wPressed, aPressed, dPressed, sPressed
+
+    if not ser:
+        print("Serial port not available. Skipping movement commands.")
+        return # Выходим, если нет связи с портом
+
+    if wPressed and aPressed and WtorfA:           # функция обработки двойного нажатия 
+        WtorfA = False                             # флаг для избежания спама
+        ser.write(bytes([0]))                      # хз, просто по другому неработает ("удаляет" прошлый байт)
+        ser.write(bytes([202])) # Y, y, q_y, case    тоже ключ как 201, но уже для движения оси по Y вперёд-назад, проще говоря это ось координат в джойстике с приложения телефона
+        ser.write(bytes([200]))                    # это уже само значение координаты по Y
+        ser.write(bytes([203])) # X, x, q_x case     тоже ключ как 201, но уже для движения оси по X влево-вправо, проще говоря это ось координат в джойстике с приложения телефона
+        ser.write(bytes([150]))                    # это уже само значение координаты по X
+        print("print_w_and_a")
+    elif wPressed and dPressed and WtorfD:
+        WtorfD = False
+        ser.write(bytes([0]))
+        ser.write(bytes([202]))
+        ser.write(bytes([200]))
+        ser.write(bytes([203]))
+        ser.write(bytes([50]))
+        print("print_w_and_d")
+    elif sPressed and aPressed and StorfA:
+        StorfA = False
+        ser.write(bytes([0]))
+        ser.write(bytes([202])) #Y, y, q_y case
+        ser.write(bytes([1]))
+        ser.write(bytes([203])) #X, x, q_x case
+        ser.write(bytes([150]))
+        print("print_s_and_a")
+    elif sPressed and dPressed and StorfD:
+        StorfD = False
+        ser.write(bytes([0]))
+        ser.write(bytes([202]))
+        ser.write(bytes([1]))
+        ser.write(bytes([203]))
+        ser.write(bytes([50]))
+        print("print_s_and_d")
+    elif wPressed and Wtorf and not aPressed and not dPressed and not sPressed: # функция обработки одного нажатия
+        Wtorf = False                                                           # флаг для избежания спама
+        ser.write(bytes([0]))                                                   # хз, просто по другому неработает ("удаляет" прошлый байт)
+        ser.write(bytes([202]))                                                 # тоже ключ как 201, но уже для движения оси по Y вперёд-назад, проще говоря это ось координат в джойстике с приложения телефона
+        ser.write(bytes([200]))                                                 # это уже само значение координаты по Y
+        ser.write(bytes([203]))                                                 # тоже ключ как 201, но уже для движения оси по X влево-вправо, проще говоря это ось координат в джойстике с приложения телефона
+        ser.write(bytes([100]))                                                 # это уже само значение координаты по X
+        print("Нажата W")
+    elif aPressed and Atorf and not wPressed and not dPressed and not sPressed:
+        Atorf = False
+        ser.write(bytes([0]))
+        ser.write(bytes([202]))
+        ser.write(bytes([100]))
+        ser.write(bytes([203]))
+        ser.write(bytes([200]))
+        print("Нажата A")
+    elif dPressed and Dtorf and not wPressed and not aPressed and not sPressed:
+        Dtorf = False
+        ser.write(bytes([0]))
+        ser.write(bytes([202]))
+        ser.write(bytes([100]))
+        ser.write(bytes([203]))
+        ser.write(bytes([1]))
+        print("Нажата D")
+    elif sPressed and Storf and not wPressed and not aPressed and not dPressed:
+        Storf = False
+        ser.write(bytes([0]))
+        ser.write(bytes([202]))
+        ser.write(bytes([1]))
+        ser.write(bytes([203]))
+        ser.write(bytes([100]))
+        print("Нажата S")
+
+    # Сброс флагов, когда клавиша отпущена
+    if not wPressed: Wtorf = True
+    if not aPressed: Atorf = True
+    if not dPressed: Dtorf = True
+    if not sPressed: Storf = True
+
+    # Полный сброс, если все клавиши отпущены
+    if not sPressed and not dPressed and not aPressed and not wPressed:
+        KUP() # Используем KUP для сброса всех комбинированных флагов
+        if ser:
+            ser.write(bytes([0])) # Остановить движение
+
+
+
+# --- Маршруты ---
+@app.route('/')
+@app.route('/index.html') 
+def index():
+    message = ''
+  
+    return render_template('index.html', message=message,
+                           wPressed=wPressed, aPressed=aPressed,
+                           dPressed=dPressed, sPressed=sPressed)
+
+
+# --- Обработка POST запросов от кнопок и клавиш ---
+@app.route('/W', methods=['POST'])       # связь с JavaScript, а конкретно если на сайте будет нажата клавиша w или W то идёт вызов URL '/W' с методом 'POST'
+def handle_W():                          # функция обработки нажатия клавиши
+    W_down()                             # вызон нужных функций
+    RUN()
+    return '', 204 # No Content
+
+@app.route('/A', methods=['POST'])
+def handle_A():
+    A_down()
+    RUN()
+    return '', 204
+
+@app.route('/D', methods=['POST'])
+def handle_D():
+    D_down()
+    RUN()
+    return '', 204
+
+@app.route('/S', methods=['POST'])
+def handle_S():
+    S_down()
+    RUN()
+    return '', 204
+
+@app.route('/w_up', methods=['POST'])    # связь с JavaScript, а конкретно если на сайте будет отжата клавиша w или W то идёт вызов URL '/w_up' с методом 'POST'
+def handle_w_up():                       # функция обработки отжатия клавиши
+    W_up()                               # вызон нужных функций
+    RUN()
+    return '', 204
+
+@app.route('/a_up', methods=['POST'])
+def handle_a_up():
+    A_up()
+    RUN()
+    return '', 204
+
+@app.route('/d_up', methods=['POST'])
+def handle_d_up():
+    D_up()
+    RUN()
+    return '', 204
+
+@app.route('/s_up', methods=['POST'])
+def handle_s_up():
+    S_up()
+    RUN()
+    return '', 204
+
+@app.route('/command', methods=['POST']) # Универсальный маршрут для команд
+def handle_command():
+    action = request.form.get('action')
+    message = ''
+
+    if action == 'Spedd = 200':
+        pp1()
+        message = 'speed = 200'
+    elif action == 'speed = 50':
+        pp()
+        message = 'speed = 50'
+    elif action == 'Отправить':                               \  
+        user_input = request.form.get('user_input')            |  # установка скорости в будующем
+        message = f'Вы ввели: {user_input}'                   /
+
+
+    # Возвращаем сообщение и обновляем состояние клавиш 
+    return render_template('index.html', message=message,
+                           wPressed=wPressed, aPressed=aPressed,
+                           dPressed=dPressed, sPressed=sPressed)
+
+
+
+# --- Запуск приложения ---
+
+                          
+port_n = 3
+try:
+    if __name__ == '__main__':
+        app.run(debug=False, host='0.0.0.0', port = port_n )
+except Exception as e:
+    print(f"Непредвиденная ошибка: {e}")
+    for i in range(0, 5):                                         # если порт занят то пытаемся подключиться к рандомному (и так пять раз)
+        print("Меняю порт...")
+        port_n = random.randint(0, 65535)
+        if __name__ == '__main__':
+            app.run(debug=False, host='0.0.0.0', port = port_n )
