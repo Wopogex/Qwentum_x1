@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Qerty_x1</title>
+    <style>
+
+    </style>
+</head>
+<body>
+    <h1>Управление Qerty_x1</h1>
+
+    <div class="controls">
+        <form method="post" action="/command">
+            <input type="submit" name="action" value="on off LED1">
+            <input type="submit" name="action" value="speed = 50">
+            <label for="user_input">Input text:</label>
+            <input type="text" id="user_input" name="user_input">
+            <input type="submit" name="action" value="Отправить">
+        </form>
+
+
+
+
+    <p style="margin-top: 30px;">{{ message }}</p>
+
+    <script>
+        let keysPressed = {}; // Объект для отслеживания нажатых клавиш
+
+        function send_post(endpoint) {
+            fetch(endpoint, { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error(`HTTP error! status: ${response.status}`);
+                    }
+                })
+                .catch(error => console.error('Fetch error:', error));
+        }
+
+        document.addEventListener('keydown', function(event) {
+            const key = event.key.toLowerCase();
+            if (keysPressed[key]) return; // Уже нажата
+            keysPressed[key] = true;
+
+            let endpoint = null;
+            switch (key) {
+                case 'w': endpoint = '/W'; break;
+                case 'a': endpoint = '/A'; break;
+                case 'd': endpoint = '/D'; break;
+                case 's': endpoint = '/S'; break;
+            }
+
+            if (endpoint) {
+                send_post(endpoint);
+            }
+        });
+
+        document.addEventListener('keyup', function(event) {
+            const key = event.key.toLowerCase();
+            delete keysPressed[key];
+
+            let endpoint = null;
+            switch (key) {
+                case 'w': endpoint = '/w_up'; break;
+                case 'a': endpoint = '/a_up'; break;
+                case 'd': endpoint = '/d_up'; break;
+                case 's': endpoint = '/s_up'; break;
+            }
+
+            if (endpoint) {
+                send_post(endpoint);
+            }
+        });
+
+    </script>
+
+</body>
+</html>
+
+
