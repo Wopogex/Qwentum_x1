@@ -76,8 +76,8 @@ ________________________________________________________________________________
                              3.1: На Raspberry Pi (4): 3.1.1: Programs -> Raspberry_Pi_Programs -> Raspberry_Pi_Cod_Python_V_1.0                                                        
                                                        3.1.2: Programs -> Raspberry_Pi_Programs -> Raspberry_Pi_Cod_JavaScript_V_1.0  ( **сохранить как "index.html" в папке "templates", и эта папка ->
                                                                                                                                                          ->  должна находится в одной директории !!!** )
-                             3.2: На Arduino Uno: Programs -> Arduino_Uno_Cod_V_1.0                                                                                              
-                             3.3: На ESP32: -> Programs -> ESP32_Cod_V_1.0                                                                                                      
+                             3.2: На Arduino Uno: Programs -> Arduino_Uno_Cod_V_1.0                                                                                                                    
+                             3.3: На ESP32: -> Programs -> ESP32_Cod_V_1.0                                                                                                                            
                              3.4: На телефон: -> Programs -> Qwentum_x1_V_1.0                                                                                                   
                                                                                                                                                                                 
 4:                                                                                                                                                                              
