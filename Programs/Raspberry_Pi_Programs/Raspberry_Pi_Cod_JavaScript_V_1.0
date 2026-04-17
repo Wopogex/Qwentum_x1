@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Qerty_x1</title>
+    <title>Qwentum_x1</title>
     <style>
 
     </style>
 </head>
 <body>
-    <h1>Управление Qerty_x1</h1>
+    <h1>Управление Qwentum_x1</h1>
 
     <div class="controls">
         <form method="post" action="/command">
